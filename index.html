@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Punto de Venta - La Casa de Mami</title>
+    <style>
+        :root {
+            --verde-mex: #006847;
+            --blanco-mex: #F4F4F4;
+            --rojo-mex: #CE1126;
+            --oro-mex: #D4A373;
+            --oscuro: #2B2D42;
+            --fondos: #FAEDCD;
+            --barro: #D96B43;
+            --gris-claro: #EAEAEA;
+            --mesa-ocupada: #E07A5F;
+            --azul-editar: #3a86c8;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--fondos);
+            color: var(--oscuro);
+            display: flex; flex-direction: column;
+            height: 100vh; height: -webkit-fill-available;
+            overflow: hidden;
+        }
+
+        html { height: -webkit-fill-available; }
+
+        header {
+            background-color: var(--verde-mex); color: white;
+            padding: 10px 15px; display: flex;
+            justify-content: space-between; align-items: center;
+            border-bottom: 4px solid var(--oro-mex);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink: 0;
+            z-index: 10;
+        }
+
+        header h1 { margin: 0; font-size: 18px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 50%; }
+
+        .header-buttons { display: flex; gap: 5px; }
+
+        .btn-header {
+            background-color: var(--barro); color: white; border: none;
+            padding: 6px 10px; font-weight: bold; border-radius: 4px;
+            cursor: pointer; font-size: 12px; transition: background 0.2s;
+        }
+        .btn-admin { background-color: var(--oscuro); }
+
+        .main-container { 
+            display: flex; 
+            flex: 1; 
+            height: calc(100vh - 105px); 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        .app-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background-color: #FFFDF6;
+        }
+
+        .tables-section { width: 180px; background-color: #E6CCB2; border-right: 3px solid var(--oro-mex); padding: 10px; overflow-y: auto; }
+        .menu-section { flex: 2; padding: 15px; overflow-y: auto; }
+        .cart-section { width: 340px; background: white; border-left: 3px solid var(--oro-mex); box-shadow: -4px 0 10px rgba(0,0,0,0.05); }
+
+        .section-title {
+            margin: 0 0 10px 0; text-align: center; color: #7f5539;
+            font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #b79476; padding-bottom: 5px;
+        }
+
+        /* MESAS */
+        .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; }
+        .table-btn {
+            background-color: white; border: 2px solid #b79476; border-radius: 8px;
+            padding: 10px 5px; text-align: center; font-weight: bold; cursor: pointer;
+            transition: all 0.2s; position: relative; color: var(--oscuro); font-size: 13px;
+        }
+        .table-btn.occupied { background-color: var(--mesa-ocupada); color: white; border-color: #b55338; }
+        .table-btn.active { background-color: var(--verde-mex) !important; color: white !important; border-color: var(--oro-mex) !important; }
+        .table-badge { display: block; font-size: 10px; color: #666; margin-top: 3px; }
+        .table-btn.occupied .table-badge { color: #fff; }
+        .table-btn.active .table-badge { color: #ddd !important; }
+
+        /* PRODUCTOS */
+        .category-container {
+            background: white; border-radius: 8px; padding: 12px;
+            margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border-left: 4px solid var(--verde-mex);
+        }
+        .category-title { margin-top: 0; color: var(--oscuro); border-bottom: 2px solid var(--gris-claro); padding-bottom: 4px; font-size: 15px; font-weight: bold; }
+        .grid-products { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 8px; }
+
+        .product-card {
+            background: var(--blanco-mex); border: 1px solid #ddd; border-radius: 8px;
+            overflow: hidden; text-align: center; cursor: pointer; display: flex; flex-direction: column;
+        }
+        .product-img { width: 100%; height: 90px; object-fit: cover; background-color: #e1e1e1; }
+        .product-info-box { padding: 6px; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; }
+        .product-name { font-weight: bold; font-size: 12px; margin-bottom: 2px; min-height: 28px; display: flex; align-items: center; justify-content: center; line-height: 1.2; }
+        .product-price { color: var(--rojo-mex); font-weight: bold; font-size: 13px; }
+        .printer-tag { font-size: 8px; background: #e6e6e6; padding: 1px 4px; border-radius: 3px; align-self: center; margin-top: 2px; color: #666; }
+
+        /* DETALLE DE CUENTA */
+        .cart-header { background: var(--oscuro); color: white; padding: 10px; font-weight: bold; font-size: 14px; text-align: center; text-transform: uppercase; }
+        .cart-items { flex: 1; overflow-y: auto; padding: 10px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--gris-claro); }
+        .cart-item-info { flex: 2; padding-right: 5px; cursor: pointer; }
+        .cart-item-name { font-size: 12px; font-weight: bold; }
+        .cart-item-meta { color: #666; font-size: 11px; }
+        .cart-item-note { color: var(--barro); font-size: 11px; font-weight: bold; margin-top: 2px; display: block; }
+        .cart-item-controls { display: flex; align-items: center; gap: 8px; }
+        .btn-qty { background: var(--gris-claro); border: 1px solid #ccc; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; }
+
+        .cart-totals { padding: 12px; background: var(--blanco-mex); border-top: 2px solid var(--oro-mex); display: flex; flex-direction: column; gap: 6px; }
+        .total-row { display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; color: var(--verde-mex); }
+        .btn-action-cart { width: 100%; color: white; border: none; padding: 10px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase; margin-bottom: 4px; }
+        .btn-kitchen { background: var(--barro); }
+        .btn-checkout { background: var(--verde-mex); }
+
+        /* NAVEGACIÓN INFERIOR MÓVIL */
+        .bottom-nav {
+            display: none; height: 55px; background: var(--oscuro);
+            border-top: 3px solid var(--oro-mex); position: fixed; bottom: 0; left: 0; width: 100%;
+            z-index: 100; justify-content: space-around; align-items: center;
+        }
+        .nav-item {
+            color: #bbb; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; font-size: 11px; font-weight: bold; text-decoration: none;
+            width: 33.33%; height: 100%; cursor: pointer; position: relative;
+        }
+        .nav-item.active { color: white; background-color: rgba(255,255,255,0.1); }
+        .nav-item span { font-size: 18px; margin-bottom: 2px; }
+        .badge-cart-count { position: absolute; top: 4px; right: 25%; background: var(--rojo-mex); color: white; font-size: 10px; padding: 2px 5px; border-radius: 50%; font-weight: bold; display: none; }
+
+        /* MODALES */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 10px; }
+        .modal-content { background-color: white; border-radius: 8px; width: 100%; max-width: 650px; padding: 15px; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--oro-mex); padding-bottom: 8px; margin-bottom: 12px; }
+        .modal-header h2 { margin: 0; font-size: 16px; color: var(--verde-mex); }
+        .close-modal { font-size: 24px; font-weight: bold; cursor: pointer; color: #aaa; padding: 0 5px; }
+
+        /* FORMULARIOS Y TABLAS */
+        .form-group { margin-bottom: 10px; display: flex; flex-direction: column; gap: 3px; }
+        .form-group label { font-weight: bold; font-size: 12px; }
+        .form-group input, .form-group select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+        .admin-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .btn-crud { padding: 6px 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; font-size: 11px; text-align: center; text-decoration: none; display: inline-block; }
+        .btn-add { background-color: var(--verde-mex); }
+        .btn-edit { background-color: var(--azul-editar); }
+        .btn-delete { background-color: var(--rojo-mex); }
+        .btn-cancel { background-color: #6c757d; }
+        
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+        .admin-table th, .admin-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        .admin-table th { background-color: var(--blanco-mex); }
+        .variant-row { display: flex; gap: 5px; margin-bottom: 4px; }
+        .actions-cell { display: flex; gap: 4px; flex-wrap: wrap; }
+
+        .edit-banner { display: none; background-color: #fff3cd; color: #856404; padding: 8px; text-align: center; font-weight: bold; font-size: 13px; border-bottom: 2px solid #ffeeba; }
+
+        /* ESTILOS EXTRAS SELECCION */
+        .extra-checkbox-label {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px; background: #f8f9fa; border: 1px solid #ddd;
+            border-radius: 5px; cursor: pointer; margin-bottom: 5px; font-size: 13px;
+        }
+        .extra-checkbox-label input { margin-right: 8px; width: 16px; height: 16px; }
+
+        @media (max-width: 768px) {
+            body { padding-bottom: 55px; }
+            .bottom-nav { display: flex; }
+            .main-container { height: calc(100vh - 105px); }
+            
+            .app-section { display: none; width: 100% !important; border: none !important; }
+            .app-section.active-mobile { display: flex; }
+
+            .tables-section { padding: 15px; }
+            .tables-grid { grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 10px; }
+            .table-btn { padding: 15px 5px; font-size: 14px; }
+
+            .grid-products { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .admin-split { grid-template-columns: 1fr; gap: 0; }
+            .actions-cell { flex-direction: column; }
+            .actions-cell .btn-crud { width: 100%; text-align: center; margin-bottom: 2px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="banner-editando-ticket" class="edit-banner">
+        ⚠️ MODIFICANDO TICKET DEL HISTORIAL (<span id="lbl-id-ticket-editando">0</span>) - Los cambios afectarán la venta global. 
+        <button onclick="finalizarEdicionTicketHistorial()" style="background-color: var(--verde-mex); color: white; border: none; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-left: 10px; cursor: pointer;">Guardar y Cerrar</button>
+    </div>
+
+    <header>
+        <h1 id="lbl-nombre-establecimiento-header">Punto de Venta</h1>
+        <div class="header-buttons">
+            <button class="btn-header btn-admin" onclick="abrirAdmin()">⚙️ Panel</button>
+            <button class="btn-header" onclick="abrirReporte()">📊 Corte e Historial</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div id="sec-mesas" class="app-section tables-section active-mobile">
+            <h3 class="section-title">Elegir Mesa</h3>
+            <div id="div-mesas-lista" class="tables-grid"></div>
+        </div>
+
+        <div id="sec-menu" class="app-section menu-section">
+            <div id="menu-section"></div>
+        </div>
+
+        <div id="sec-cuenta" class="app-section cart-section">
+            <div class="cart-header" id="active-cart-title">Mesa 1</div>
+            <div class="cart-items" id="cart-items"></div>
+            <div class="cart-totals">
+                <div class="total-row">
+                    <span>Total:</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+                <button class="btn-action-cart btn-kitchen" onclick="confirmarYEnviarComandasPorAreas()">✂️ Mandar Comandas (Un solo Ticket)</button>
+                <button class="btn-action-cart btn-checkout" id="btn-principal-cobrar" onclick="cobrarEImprimirCliente()">💵 Cobrar y Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ticket-impresion-pc" style="display: none;"></div>
+
+    <div class="bottom-nav">
+        <div id="nav-btn-mesas" class="nav-item active" onclick="cambiarPestanaMovil('mesas')"><span>📌</span>Mesas</div>
+        <div id="nav-btn-menu" class="nav-item" onclick="cambiarPestanaMovil('menu')"><span>🍽️</span>Menú</div>
+        <div id="nav-btn-cuenta" class="nav-item" onclick="cambiarPestanaMovil('cuenta')">
+            <span id="badge-carrito" class="badge-cart-count">0</span><span>🛒</span>Cuenta
+        </div>
+    </div>
+
+    <div id="modal-variantes" class="modal">
+        <div class="modal-content" style="max-width: 380px;">
+            <div class="modal-header">
+                <h2 id="lbl-var-titulo">Selecciona Opción</h2>
+                <span class="close-modal" onclick="cerrarModalVariantes()">&times;</span>
+            </div>
+            <div id="div-opciones-variantes" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <div id="modal-nota-item" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>➕ Extras y Modificadores</h2>
+                <span class="close-modal" onclick="cerrarModalNotaItem()">&times;</span>
+            </div>
+            <p id="lbl-nota-item-nombre" style="font-weight: bold; margin: 0 0 10px 0; font-size:14px; color: var(--barro);"></p>
+            
+            <div class="form-group">
+                <label style="margin-bottom: 5px;">Selecciona los extras que apliquen:</label>
+                <div id="div-contenedor-checkboxes-extras" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 5px;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Instrucción o nota manual extra:</label>
+                <input type="text" id="txt-nota-item-personalizada" placeholder="Ej. Bien cocido, sin cebolla...">
+            </div>
+
+            <button class="btn-action-cart btn-checkout" style="margin-top: 10px;" onclick="guardarNotaYExtrasItemActual()">💾 Aplicar y Actualizar Cuenta</button>
+        </div>
+    </div>
+
+    <div id="modal-reporte" class="modal">
+        <div class="modal-content" style="max-width: 620px;">
+            <div class="modal-header">
+                <h2>📊 Corte de Caja e Historial</h2>
+                <span class="close-modal" onclick="document.getElementById('modal-reporte').style.display='none'">&times;</span>
+            </div>
+            <div style="background-color: #e2f0d9; border: 1px solid var(--verde-mex); padding: 10px; border-radius: 6px; font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 12px; color: var(--verde-mex);">
+                VENTA TOTAL ACUMULADA: <span id="lbl-venta-global-total">$0.00</span>
+            </div>
+
+            <button class="btn-action-cart btn-kitchen" style="background-color: #4a5759; margin-bottom: 15px; font-size: 14px;" onclick="imprimirReporteDiarioPorAreas()">🖨️ Imprimir Reporte Diario por Áreas</button>
+
+            <h3>Ventas por Categoría</h3>
+            <table class="admin-table" style="margin-bottom: 15px;">
+                <thead><tr><th>Categoría</th><th>Total</th></tr></thead>
+                <tbody id="tbody-reporte-categorias"></tbody>
+            </table>
+            <h3>📋 Historial de Tickets Emitidos</h3>
+            <div style="max-height: 250px; overflow-y:auto; border:1px solid #ccc; border-radius:4px;">
+                <table class="admin-table" style="margin-top:0;">
+                    <thead style="position: sticky; top:0; z-index:1;">
+                        <tr><th>Orden</th><th>Mesa</th><th>Total</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tbody-historial-tickets"></tbody>
+                </table>
+            </div>
+            <button class="btn-action-cart btn-checkout" style="background-color: var(--rojo-mex); margin-top: 15px;" onclick="reiniciarTodoSistema()">🔄 Resetear / Iniciar Nuevo Día</button>
+        </div>
+    </div>
+
+    <div id="modal-admin" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Panel Control General</h2>
+                <span class="close-modal" onclick="cerrarAdmin()">&times;</span>
+            </div>
+
+            <div style="background: #fff9db; padding: 10px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #f59f00;">
+                <h3 style="margin-top:0; color:#f59f00;" id="lbl-titulo-admin-areas">1. Configurar Áreas de Destino</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 5px; margin-bottom:8px;">
+                    <input type="text" id="txt-nueva-area-nombre" placeholder="Ej. Cocina, Barra, Barra Bebidas...">
+                    <button class="btn-crud btn-add" id="btn-guardar-area" onclick="agregarAreaPreparacion()">+ Añadir</button>
+                </div>
+                <div style="max-height: 120px; overflow-y:auto;">
+                    <table class="admin-table" style="margin-top:0;">
+                        <thead><tr><th>Área de Destino</th><th>Acciones</th></tr></thead>
+                        <tbody id="tbody-admin-areas"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="background: #fdf0ed; padding: 10px; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--oro-mex);">
+                <h3 id="lbl-titulo-admin-categorias">2. Categorías</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 5px; margin-bottom:8px;">
+                    <input type="text" id="txt-nueva-cat" placeholder="Ej. Bebidas, Tacos...">
+                    <button class="btn-crud btn-add" id="btn-guardar-categoria" onclick="agregarCategoria()">+ Guardar</button>
+                </div>
+                <div style="max-height:110px; overflow-y:auto; margin-top:8px;">
+                    <table class="admin-table">
+                        <thead><tr><th>Categoría</th><th>Acciones</th></tr></thead>
+                        <tbody id="tbody-admin-categorias"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="background: #f3edf8; padding: 10px; border-radius: 6px; margin-bottom: 12px; border: 1px solid #6a4c93;">
+                <h3 style="margin-top:0; color:#6a4c93;" id="lbl-titulo-admin-extras">3. Catálogo de Extras y Modificadores</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 5px; margin-bottom:8px;">
+                    <input type="text" id="txt-nuevo-extra-nombre" placeholder="Ej. Queso Extra, Desechable">
+                    <input type="number" id="num-nuevo-extra-precio" placeholder="Precio" step="0.01" value="0.00">
+                    <button class="btn-crud btn-add" style="background-color: #6a4c93;" id="btn-guardar-extra-catalogo" onclick="agregarExtraCatalogo()">+ Agregar</button>
+                </div>
+                <div style="max-height:110px; overflow-y:auto;">
+                    <table class="admin-table">
+                        <thead><tr><th>Modificador / Extra</th><th>Precio Adicional</th><th>Acciones</th></tr></thead>
+                        <tbody id="tbody-admin-extras"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="background: #f0f7f4; padding: 10px; border-radius: 6px; border: 1px solid var(--verde-mex); margin-bottom: 12px;">
+                <h3 id="lbl-titulo-formulario-producto">4. Agregar Producto</h3>
+                <div class="admin-split">
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="sel-prod-cat"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre Platillo</label>
+                        <input type="text" id="txt-prod-nombre" placeholder="Ej. Tacos al Pastor">
+                    </div>
+                </div>
+                <div class="admin-split">
+                    <div class="form-group">
+                        <label>Área de Destino</label>
+                        <select id="sel-prod-impresora"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Imagen <span style="font-weight:normal;color:#666;">(Opcional)</span></label>
+                        <input type="file" id="file-prod-img" accept="image/*">
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-bottom: 10px;">
+                    <div style="margin-bottom: 6px; font-size:12px;">
+                        <input type="radio" name="rad-tipo-precio" id="rad-precio-simple" checked onclick="conmutarInputsVariante(false)"> <label for="rad-precio-simple">Precio Único</label>
+                        <input type="radio" name="rad-tipo-precio" id="rad-precio-variantes" onclick="conmutarInputsVariante(true)"> <label for="rad-precio-variantes">Variantes</label>
+                    </div>
+                    <div id="box-precio-simple" class="form-group">
+                        <label>Precio ($)</label>
+                        <input type="number" id="num-prod-precio" step="0.01" value="0.00">
+                    </div>
+                    <div id="box-precio-variantes" style="display:none;">
+                        <div id="div-lista-variantes-inputs">
+                            <div class="variant-row">
+                                <input type="text" placeholder="Ej. Orden" style="flex:2;">
+                                <input type="number" placeholder="80.00" step="0.01" style="flex:1;">
+                            </div>
+                        </div>
+                        <button class="btn-crud btn-add" style="margin-top:5px; background-color:var(--oro-mex);" onclick="agregarFilaVarianteInput()">+ Otra Variante</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-crud btn-add" style="flex:3; padding: 10px;" id="btn-guardar-producto-principal" onclick="procesarYGuardarProducto()">🚀 Registrar Producto</button>
+                    <button class="btn-crud btn-cancel" style="flex:1; padding: 10px; display:none;" id="btn-cancelar-edicion" onclick="cancelarEdicionProducto()">X</button>
+                </div>
+
+                <h3 style="margin-top:15px;">Productos Registrados</h3>
+                <div style="max-height: 180px; overflow-y:auto;">
+                    <table class="admin-table">
+                        <thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Precios</th><th>Área</th><th>Acciones</th></tr></thead>
+                        <tbody id="tbody-admin-productos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="background: #eef1f6; padding: 10px; border-radius: 6px; border: 1px solid var(--azul-editar);">
+                <h3>5. Configurar Datos del Ticket</h3>
+                <div class="form-group">
+                    <label>Nombre Comercial</label>
+                    <input type="text" id="txt-ticket-nombre" placeholder="Nombre Comercial">
+                </div>
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <input type="text" id="txt-ticket-direccion" placeholder="Calle, Número, Colonia">
+                </div>
+                <div class="admin-split">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="txt-ticket-telefono" placeholder="Teléfono">
+                    </div>
+                    <div class="form-group">
+                        <label>Mensaje al Pie</label>
+                        <input type="text" id="txt-ticket-pie" placeholder="¡Gracias por su visita!">
+                    </div>
+                </div>
+                <button class="btn-crud btn-edit" style="width:100%; padding: 10px;" onclick="procesarYGuardarConfigTicket()">💾 Guardar Configuración Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imgDefecto = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ccc'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%23666'>Sin Foto</text></svg>";
+
+        const ticketConfigDefecto = {
+            logoImg: "",
+            nombre: "LA CASA DE MAMI",
+            direccion: "Dirección Establecimiento",
+            telefono: "Tel: 00-0000-0000",
+            pie: "¡Gracias por su visita!"
+        };
+
+        let menuData = [];
+        let mesasActivas = {};
+        let historialTickets = []; 
+        let ticketConfig = {};
+        let areasPreparacion = []; 
+        let catalogoExtras = []; 
+        let ticketIdEditandoActualmente = null; 
+        let mesaSeleccionada = "Mesa 1";
+        const numeroMesasTotal = 12;
+        let productoEnEsperaVariante = null;
+
+        let idProductoEditando = null; 
+        let imgProductoEditandoOriginal = null; 
+        let idAreaEditandoIndex = null;
+        let idCategoriaEditandoIndex = null;
+        let idExtraEditandoIndex = null; // Nuevo puntero para editar extras
+        let itemCarritoModificandoNota = null;
+
+        function cambiarPestanaMovil(pestana) {
+            document.getElementById('nav-btn-mesas').classList.remove('active');
+            document.getElementById('nav-btn-menu').classList.remove('active');
+            document.getElementById('nav-btn-cuenta').classList.remove('active');
+            document.getElementById('sec-mesas').classList.remove('active-mobile');
+            document.getElementById('sec-menu').classList.remove('active-mobile');
+            document.getElementById('sec-cuenta').classList.remove('active-mobile');
+
+            if (pestana === 'mesas') {
+                document.getElementById('nav-btn-mesas').classList.add('active');
+                document.getElementById('sec-mesas').classList.add('active-mobile');
+            } else if (pestana === 'menu') {
+                document.getElementById('nav-btn-menu').classList.add('active');
+                document.getElementById('sec-menu').classList.add('active-mobile');
+            } else if (pestana === 'cuenta') {
+                document.getElementById('nav-btn-cuenta').classList.add('active');
+                document.getElementById('sec-cuenta').classList.add('active-mobile');
+            }
+        }
+
+        function cargarTodo() {
+            const localMenu = localStorage.getItem('pos_mex_menu');
+            if(localMenu) { menuData = JSON.parse(localMenu); } else { menuData = [
+                { categoria: "Otros Platillos", platillos: [{ id: 1, nombre: "Platillo de Ejemplo", precio: 100.00, impresora: "Cocina", imagen: imgDefecto, variantes: null }] }
+            ]; guardarMenu(); }
+
+            const storageMesas = localStorage.getItem('pos_mex_mesasActivas');
+            if(storageMesas) { mesasActivas = JSON.parse(storageMesas); } else { for(let i = 1; i <= numeroMesasTotal; i++) { mesasActivas[`Mesa ${i}`] = []; } }
+
+            const storageHistorial = localStorage.getItem('pos_mex_historialTickets');
+            if(storageHistorial) { historialTickets = JSON.parse(storageHistorial); } else { historialTickets = []; }
+
+            const storageTicket = localStorage.getItem('pos_mex_ticketConfig');
+            if(storageTicket) { ticketConfig = JSON.parse(storageTicket); } else { ticketConfig = ticketConfigDefecto; localStorage.setItem('pos_mex_ticketConfig', JSON.stringify(ticketConfig)); }
+            
+            const storageAreas = localStorage.getItem('pos_mex_areasPrep');
+            if(storageAreas) { areasPreparacion = JSON.parse(storageAreas); } else { areasPreparacion = ["Cocina", "Barra"]; localStorage.setItem('pos_mex_areasPrep', JSON.stringify(areasPreparacion)); }
+
+            const storageExtras = localStorage.getItem('pos_mex_catalogoExtras');
+            if(storageExtras) { 
+                catalogoExtras = JSON.parse(storageExtras); 
+            } else { 
+                catalogoExtras = [
+                    {nombre: "QUESO EXTRA", precio: 15.00},
+                    {nombre: "PARA LLEVAR / DESECHABLE", precio: 5.00},
+                    {nombre: "SIN CEBOLLA / VERDURA", precio: 0.00}
+                ];
+                localStorage.setItem('pos_mex_catalogoExtras', JSON.stringify(catalogoExtras));
+            }
+
+            document.getElementById('lbl-nombre-establecimiento-header').innerText = ticketConfig.nombre;
+        }
+
+        function guardarMenu() { localStorage.setItem('pos_mex_menu', JSON.stringify(menuData)); }
+        function guardarMesas() { localStorage.setItem('pos_mex_mesasActivas', JSON.stringify(mesasActivas)); }
+        function guardarHistorial() { localStorage.setItem('pos_mex_historialTickets', JSON.stringify(historialTickets)); }
+        function guardarAreas() { localStorage.setItem('pos_mex_areasPrep', JSON.stringify(areasPreparacion)); }
+        function guardarCatalogoExtras() { localStorage.setItem('pos_mex_catalogoExtras', JSON.stringify(catalogoExtras)); }
+
+        function obtenerVentasPorCategoria() {
+            let acumulado = {};
+            menuData.forEach(cat => { acumulado[cat.categoria] = 0; });
+            historialTickets.forEach(ticket => {
+                ticket.items.forEach(item => {
+                    if(!acumulado[item.categoria]) acumulado[item.categoria] = 0;
+                    let totalExtras = (item.extrasSeleccionados || []).reduce((sum, e) => sum + e.precio, 0);
+                    acumulado[item.categoria] += ((item.precio + totalExtras) * item.cantidad);
+                });
+            });
+            return acumulado;
+        }
+
+        function renderMesas() {
+            const container = document.getElementById('div-mesas-lista'); container.innerHTML = '';
+            for(let i = 1; i <= numeroMesasTotal; i++) {
+                const nombreMesa = `Mesa ${i}`;
+                const btn = document.createElement('div');
+                const cuentaMesa = mesasActivas[nombreMesa] || [];
+                let totalMesa = 0;
+                cuentaMesa.forEach(item => {
+                    let totalExtras = (item.extrasSeleccionados || []).reduce((sum, e) => sum + e.precio, 0);
+                    totalMesa += ((item.precio + totalExtras) * item.cantidad);
+                });
+                
+                btn.className = 'table-btn';
+                if(cuentaMesa.length > 0) btn.classList.add('occupied');
+                if(mesaSeleccionada === nombreMesa && ticketIdEditandoActualmente === null) btn.classList.add('active');
+
+                btn.innerHTML = `<span>Mesa ${i}</span><span class="table-badge">${cuentaMesa.length > 0 ? '$' + totalMesa.toFixed(0) : 'Vacía'}</span>`;
+                btn.onclick = () => {
+                    if(ticketIdEditandoActualmente !== null) { return alert("Estás editando un ticket del historial. Guarda o cierra primero."); }
+                    mesaSeleccionada = nombreMesa;
+                    document.getElementById('active-cart-title').innerText = nombreMesa;
+                    renderMesas(); 
+                    actualizarMesaActualUI();
+                    if (window.innerWidth <= 768) { cambiarPestanaMovil('menu'); }
+                };
+                container.appendChild(btn);
+            }
+        }
+
+        function renderMenu() {
+            const menuSection = document.getElementById('menu-section'); menuSection.innerHTML = '';
+            menuData.forEach((cat) => {
+                const catContainer = document.createElement('div');
+                catContainer.className = `category-container`;
+                catContainer.innerHTML = `<h3 class="category-title">${cat.categoria}</h3>`;
+                const grid = document.createElement('div'); grid.className = 'grid-products';
+
+                cat.platillos.forEach(platillo => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    card.onclick = () => procesarSeleccionProducto(platillo, cat.categoria);
+                    let txtPrecio = platillo.variantes ? `$${platillo.variantes[0].precio.toFixed(0)}+` : `$${platillo.precio.toFixed(0)}`;
+                    card.innerHTML = `
+                        <img class="product-img" src="${platillo.imagen || imgDefecto}" alt="${platillo.nombre}">
+                        <div class="product-info-box">
+                            <div class="product-name">${platillo.nombre}</div>
+                            <div class="product-price">${txtPrecio}</div>
+                            <div class="printer-tag">📍 ${platillo.impresora || 'Sin Área'}</div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+                catContainer.appendChild(grid); menuSection.appendChild(catContainer);
+            });
+        }
+
+        function procesarSeleccionProducto(platillo, categoriaNombre) {
+            if (platillo.variantes && platillo.variantes.length > 0) {
+                productoEnEsperaVariante = { ...platillo, categoria: categoriaNombre };
+                document.getElementById('lbl-var-titulo').innerText = platillo.nombre;
+                const containerOpc = document.getElementById('div-opciones-variantes');
+                containerOpc.innerHTML = '';
+                platillo.variantes.forEach(v => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-action-cart btn-kitchen';
+                    btn.style.textAlign = 'left';
+                    btn.innerHTML = `<span>${v.nombre}</span> <span style="float:right;">$${v.precio.toFixed(0)}</span>`;
+                    btn.onclick = () => agregarVarianteElegida(v.nombre, v.precio);
+                    containerOpc.appendChild(btn);
+                });
+                document.getElementById('modal-variantes').style.display = 'flex';
+            } else {
+                agregarAlCarrito(platillo.id, platillo.nombre, platillo.precio, platillo.impresora, categoriaNombre);
+            }
+        }
+
+        function agregarVarianteElegida(varianteNombre, precio) {
+            const nombreCompleto = `${productoEnEsperaVariante.nombre} (${varianteNombre})`;
+            agregarAlCarrito(productoEnEsperaVariante.id + '-' + varianteNombre, nombreCompleto, precio, productoEnEsperaVariante.impresora, productoEnEsperaVariante.categoria);
+            cerrarModalVariantes();
+        }
+
+        function cerrarModalVariantes() { document.getElementById('modal-variantes').style.display = 'none'; productoEnEsperaVariante = null; }
+
+        function agregarAlCarrito(idUnico, ...args) {
+            let targetCarrito = [];
+            if(ticketIdEditandoActualmente !== null) {
+                const t = historialTickets.find(h => Number(h.id) === Number(ticketIdEditandoActualmente));
+                if(t) targetCarrito = t.items;
+            } else {
+                targetCarrito = mesasActivas[mesaSeleccionada];
+            }
+            if (!targetCarrito) return;
+
+            const itemExistente = targetCarrito.find(item => String(item.id) === String(idUnico));
+            if (itemExistente) { 
+                itemExistente.cantidad++; 
+            } else { 
+                targetCarrito.push({ id: idUnico, nombre: args[0], precio: args[1], impresora: args[2], categoria: args[3], cantidad: 1, nota: "", extrasSeleccionados: [] }); 
+            }
+            
+            recalcularYGuardarContexto();
+        }
+
+        function recalcularYGuardarContexto() {
+            if(ticketIdEditandoActualmente !== null) { 
+                const t = historialTickets.find(h => Number(h.id) === Number(ticketIdEditandoActualmente));
+                if(t) {
+                    let nt = 0; 
+                    t.items.forEach(it => {
+                        let extrasSum = (it.extrasSeleccionados || []).reduce((s, e) => s + e.precio, 0);
+                        nt += ((it.precio + extrasSum) * it.cantidad);
+                    }); 
+                    t.total = nt;
+                }
+                guardarHistorial(); 
+            } else { 
+                guardarMesas(); 
+            }
+            renderMesas(); 
+            actualizarMesaActualUI();
+        }
+
+        function abrirModalNotaItem(idUnico) {
+            let targetCarrito = [];
+            if(ticketIdEditandoActualmente !== null) {
+                const t = historialTickets.find(h => Number(h.id) === Number(ticketIdEditandoActualmente));
+                if(t) targetCarrito = t.items;
+            } else {
+                targetCarrito = mesasActivas[mesaSeleccionada];
+            }
+            
+            const item = targetCarrito.find(i => String(i.id) === String(idUnico));
+            if(!item) return;
+
+            itemCarritoModificandoNota = item;
+            document.getElementById('lbl-nota-item-nombre').innerText = `${item.nombre} ($${item.precio.toFixed(2)})`;
+            document.getElementById('txt-nota-item-personalizada').value = item.nota || "";
+
+            const checkboxContainer = document.getElementById('div-contenedor-checkboxes-extras');
+            checkboxContainer.innerHTML = '';
+            
+            if(catalogoExtras.length === 0) {
+                checkboxContainer.innerHTML = `<span style="font-size:12px;color:#999;text-align:center;">No hay extras configurados en el Panel.</span>`;
+            } else {
+                catalogoExtras.forEach((extra, index) => {
+                    const yaSeleccionado = (item.extrasSeleccionados || []).some(e => e.nombre === extra.nombre);
+                    const label = document.createElement('label');
+                    label.className = 'extra-checkbox-label';
+                    label.innerHTML = `
+                        <div>
+                            <input type="checkbox" value="${index}" ${yaSeleccionado ? 'checked' : ''}>
+                            <strong>${extra.nombre}</strong>
+                        </div>
+                        <span style="color:var(--rojo-mex); font-weight:bold;">+$${extra.precio.toFixed(2)}</span>
+                    `;
+                    checkboxContainer.appendChild(label);
+                });
+            }
+
+            document.getElementById('modal-nota-item').style.display = 'flex';
+        }
+
+        function guardarNotaYExtrasItemActual() {
+            if(itemCarritoModificandoNota) {
+                itemCarritoModificandoNota.nota = document.getElementById('txt-nota-item-personalizada').value.trim().toUpperCase();
+                
+                const checkboxes = document.getElementById('div-contenedor-checkboxes-extras').querySelectorAll('input[type="checkbox"]');
+                let extrasElegidos = [];
+                checkboxes.forEach(cb => {
+                    if(cb.checked) {
+                        const idxExtra = parseInt(cb.value);
+                        extrasElegidos.push({ ...catalogoExtras[idxExtra] });
+                    }
+                });
+                
+                itemCarritoModificandoNota.extrasSeleccionados = extrasElegidos;
+                recalcularYGuardarContexto();
+            }
+            cerrarModalNotaItem();
+        }
+
+        function cerrarModalNotaItem() { document.getElementById('modal-nota-item').style.display = 'none'; itemCarritoModificandoNota = null; }
+
+        function cambiarCantidad(id, cambio) {
+            let targetCarrito = [];
+            if(ticketIdEditandoActualmente !== null) {
+                const t = historialTickets.find(h => Number(h.id) === Number(ticketIdEditandoActualmente));
+                if(t) targetCarrito = t.items;
+            } else {
+                targetCarrito = mesasActivas[mesaSeleccionada] || [];
+            }
+
+            const item = targetCarrito.find(item => String(item.id) === String(id));
+            if (item) {
+                item.cantidad += cambio;
+                if (item.cantidad <= 0) { 
+                    if(ticketIdEditandoActualmente !== null) {
+                        const t = historialTickets.find(h => Number(h.id) === Number(ticketIdEditandoActualmente));
+                        t.items = t.items.filter(i => String(i.id) !== String(id));
+                    } else {
+                        mesasActivas[mesaSeleccionada] = targetCarrito.filter(i => String(i.id) !== String(id)); 
+                    }
+                }
+            }
+            recalcularYGuardarContexto();
+        }
+
+        function actualizarMesaActualUI() {
+            const cartItemsContainer = document.getElementById('cart-items'); cartItemsContainer.innerHTML = '';
+            let total = 0;
+            let articulosTotales = 0;
+            
+            let cuentaAMostrar = [];
+            if(ticketIdEditandoActualmente !== null) {
+                const t = historialTickets.find(h => Number(h.id) === Number(ticketIdEditandoActualmente));
+                cuentaAMostrar = t ? t.items : [];
+            } else {
+                cuentaAMostrar = mesasActivas[mesaSeleccionada] || [];
+            }
+            
+            cuentaAMostrar.forEach(item => {
+                let precioExtras = (item.extrasSeleccionados || []).reduce((sum, e) => sum + e.precio, 0);
+                const subtotal = (item.precio + precioExtras) * item.cantidad; 
+                total += subtotal;
+                articulosTotales += item.cantidad;
+
+                const div = document.createElement('div'); div.className = 'cart-item';
+                
+                let txtModificadoresListado = "";
+                if(item.extrasSeleccionados && item.extrasSeleccionados.length > 0) {
+                    txtModificadoresListado = item.extrasSeleccionados.map(e => `+ ${e.nombre} (+$${e.precio.toFixed(0)})`).join(', ');
+                }
+                if(item.nota) {
+                    txtModificadoresListado += (txtModificadoresListado ? ' | ' : '') + `Nota: ${item.nota}`;
+                }
+
+                let htmlNota = txtModificadoresListado 
+                    ? `<span class="cart-item-note">⚙️ ${txtModificadoresListado}</span>` 
+                    : `<span class="cart-item-note" style="color:#aaa; font-weight:normal;">➕ Agregar Extras o Modificadores</span>`;
+                
+                div.innerHTML = `
+                    <div class="cart-item-info" onclick="abrirModalNotaItem('${item.id}')">
+                        <div class="cart-item-name">🍽️ ${item.nombre}</div>
+                        <div class="cart-item-meta">$${(item.precio + precioExtras).toFixed(2)} x ${item.cantidad} = <strong>$${subtotal.toFixed(2)}</strong></div>
+                        ${htmlNota}
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="btn-qty" onclick="cambiarCantidad('${item.id}', -1)">-</button>
+                        <span style="font-size:14px; font-weight:bold; min-width:15px; text-align:center;">${item.cantidad}</span>
+                        <button class="btn-qty" onclick="cambiarCantidad('${item.id}', 1)">+</button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(div);
+            });
+            document.getElementById('cart-total').innerText = `$${total.toFixed(2)}`;
+
+            const badge = document.getElementById('badge-carrito');
+            if (articulosTotales > 0) { badge.innerText = articulosTotales; badge.style.display = 'block'; } else { badge.style.display = 'none'; }
+        }
+
+        function enviarImpresionUniversal(textoPlanoTicket) {
+            if (!textoPlanoTicket) return;
+            const esAndroid = /Android/i.test(navigator.userAgent);
+
+            if (esAndroid) {
+                try {
+                    let textoNormalizado = textoPlanoTicket
+                        .replace(/[ááÁ]/g, 'a').replace(/[ééÉ]/g, 'e')
+                        .replace(/[ííÍ]/g, 'i').replace(/[óóÓ]/g, 'o')
+                        .replace(/[úúÚ]/g, 'u').replace(/[ñÑ]/g, 'n')
+                        .replace(/[¡¿]/g, '');
+
+                    const lineas = textoNormalizado.split('\n');
+                    let textoAjustado = "";
+                    const nombreNegocio = ticketConfig.nombre || "";
+
+                    lineas.forEach((linea, index) => {
+                        let lineaProcesada = linea;
+                        if (linea.length > 32 && !linea.includes("====") && !linea.includes("----")) {
+                            let palabras = linea.split(' ');
+                            let lineaActual = "";
+                            palabras.forEach(palabra => {
+                                if ((lineaActual + palabra).length > 32) {
+                                    textoAjustado += lineaActual.padEnd(32) + "\n";
+                                    lineaActual = palabra + " ";
+                                } else { lineaActual += palabra + " "; }
+                            });
+                            lineaProcesada = lineaActual;
+                        }
+                        if ((index === 0 || (nombreNegocio && lineaProcesada.includes(nombreNegocio))) && lineaProcesada.trim() !== "") {
+                            textoAjustado += "\x1B\x45\x01" + lineaProcesada + "\x1B\x45\x00\n";
+                        } else { textoAjustado += lineaProcesada + "\n"; }
+                    });
+
+                    window.location.href = `rawbt:text=${encodeURIComponent(textoAjustado)}`;
+                } catch (e) { alert("Error al conectar con la aplicación de impresión."); }
+            } else {
+                const contenedorPC = document.getElementById('ticket-impresion-pc');
+                contenedorPC.innerText = textoPlanoTicket; contenedorPC.style.display = 'block';
+                window.print();
+                setTimeout(() => { contenedorPC.style.display = 'none'; contenedorPC.innerText = ''; }, 500);
+            }
+        }
+
+        function confirmarYEnviarComandasPorAreas() {
+            let cuentaActual = [];
+            let tituloComanda = mesaSeleccionada;
+
+            if(ticketIdEditandoActualmente !== null) {
+                const t = historialTickets.find(h => Number(h.id) === Number(ticketIdEditandoActualmente));
+                cuentaActual = t ? t.items : [];
+                tituloComanda = `EDIT ${t.mesa} (#${t.id})`;
+            } else {
+                cuentaActual = mesasActivas[mesaSeleccionada] || [];
+            }
+
+            if (cuentaActual.length === 0) { alert("No hay productos en esta orden."); return; }
+            if (!confirm(`¿Generar ticket unificado de comandas por áreas?`)) return;
+
+            let productosPorArea = {};
+            cuentaActual.forEach(item => {
+                const area = item.impresora || "Sin Área";
+                if(!productosPorArea[area]) productosPorArea[area] = [];
+                productosPorArea[area].push(item);
+            });
+
+            const numeroOrden = Math.floor(1000 + Math.random() * 9000);
+            const fechaHora = new Date().toLocaleString();
+            let areasProcesadas = Object.keys(productosPorArea);
+            let comandaTextoCompleto = `\n`;
+
+            areasProcesadas.forEach((area, index) => {
+                comandaTextoCompleto += `================================\n`;
+                comandaTextoCompleto += `       COMANDA: ${area.toUpperCase()}\n`;
+                comandaTextoCompleto += `================================\n`;
+                comandaTextoCompleto += `ORIGEN: ${tituloComanda.toUpperCase()}\n`;
+                comandaTextoCompleto += `FECHA : ${fechaHora}\n`;
+                comandaTextoCompleto += `ORDEN : #${numeroOrden}\n`;
+                comandaTextoCompleto += `--------------------------------\n`;
+                
+                productosPorArea[area].forEach(item => {
+                    comandaTextoCompleto += `${item.cantidad} x ${item.nombre}\n`;
+                    
+                    if(item.extrasSeleccionados && item.extrasSeleccionados.length > 0) {
+                        item.extrasSeleccionados.forEach(e => {
+                            comandaTextoCompleto += `   [+] REQ: ${e.nombre}\n`;
+                        });
+                    }
+                    if(item.nota && item.nota.trim() !== "") {
+                        comandaTextoCompleto += `   [*] NOTA: ${item.nota}\n`;
+                    }
+                    comandaTextoCompleto += `--------------------------------\n`;
+                });
+
+                if(index < areasProcesadas.length - 1) {
+                    comandaTextoCompleto += `\n[--- CORTAR AQUÍ PARA ${area.toUpperCase()} ---]\n\n\x1Bi\n\n`;
+                } else {
+                    comandaTextoCompleto += `================================\n\n\n\n\x1Bi`;
+                }
+            });
+
+            enviarImpresionUniversal(comandaTextoCompleto);
+        }
+
+        function cobrarEImprimirCliente() {
+            const cuentaActual = mesasActivas[mesaSeleccionada] || [];
+            if (cuentaActual.length === 0) { alert("Mesa vacía."); return; }
+            if (!confirm(`¿Proceder a realizar el cobro de la ${mesaSeleccionada}?`)) return;
+
+            const numeroOrden = Math.floor(1000 + Math.random() * 9000);
+            const fechaHora = new Date().toLocaleString();
+
+            let totalCuenta = 0;
+            cuentaActual.forEach(i => {
+                let exPrice = (i.extrasSeleccionados || []).reduce((s, e) => s + e.precio, 0);
+                totalCuenta += ((i.precio + exPrice) * i.cantidad);
+            });
+
+            const nuevoTicket = {
+                id: Number(numeroOrden),
+                mesa: mesaSeleccionada,
+                fecha: fechaHora,
+                items: JSON.parse(JSON.stringify(cuentaActual)), 
+                total: totalCuenta
+            };
+
+            historialTickets.push(nuevoTicket);
+            guardarHistorial();
+            imprimirTicketDispositivoRAWBT(nuevoTicket);
+
+            mesasActivas[mesaSeleccionada] = [];
+            guardarMesas(); renderMesas(); actualizarMesaActualUI();
+            if (window.innerWidth <= 768) { cambiarPestanaMovil('mesas'); }
+        }
+
+        function imprimirTicketDispositivoRAWBT(ticketObjeto) {
+            if(!ticketObjeto) return;
+            let tText = `\n`;
+            tText += `${ticketConfig.nombre.toUpperCase()}      \n`;
+            tText += `${ticketConfig.direccion}\n`;
+            tText += `${ticketConfig.telefono}\n`;
+            tText += `--------------------------------\n`;
+            tText += `       TICKET DE CONSUMO        \n`;
+            tText += `--------------------------------\n`;
+            tText += `Ubicacion: ${ticketObjeto.mesa.toUpperCase()}\n`;
+            tText += `Orden    : #${ticketObjeto.id}\n`;
+            tText += `Fecha    : ${ticketObjeto.fecha}\n`;
+            tText += `--------------------------------\n`;
+            
+            ticketObjeto.items.forEach(item => {
+                let priceExtras = (item.extrasSeleccionados || []).reduce((sum, e) => sum + e.precio, 0);
+                const precioCompletoUnitario = item.precio + priceExtras;
+                const sub = precioCompletoUnitario * item.cantidad;
+
+                tText += `${item.cantidad} x ${item.nombre.substring(0,22)}\n`;
+                
+                if(item.extrasSeleccionados && item.extrasSeleccionados.length > 0) {
+                    item.extrasSeleccionados.forEach(e => {
+                        tText += `  + ${e.nombre.substring(0,18)} (+$${e.precio})\n`;
+                    });
+                }
+                if(item.nota && item.nota.trim() !== "") { tText += `  *Nota: ${item.nota}\n`; }
+                
+                tText += `                 $${sub.toFixed(2)}\n`;
+            });
+            
+            tText += `--------------------------------\n`;
+            tText += `TOTAL A PAGAR:   $${ticketObjeto.total.toFixed(2)}\n`;
+            tText += `--------------------------------\n`;
+            tText += `   ${ticketConfig.pie}   \n\n\n\n\x1Bi`;
+
+            enviarImpresionUniversal(tText);
+        }
+
+        function imprimirReporteDiarioPorAreas() {
+            if(historialTickets.length === 0) { return alert("No hay tickets emitidos para generar reporte."); }
+
+            let reporteAgrupado = {};
+            let granTotalGlobal = 0;
+
+            areasPreparacion.forEach(a => { reporteAgrupado[a] = { productos: {}, totalDinero: 0 }; });
+            reporteAgrupado["Sin Área Asignada"] = { productos: {}, totalDinero: 0 };
+
+            historialTickets.forEach(ticket => {
+                ticket.items.forEach(item => {
+                    let areaDestino = item.impresora || "Sin Área Asignada";
+                    if(!reporteAgrupado[areaDestino]) reporteAgrupado[areaDestino] = { productos: {}, totalDinero: 0 };
+
+                    if(!reporteAgrupado[areaDestino].productos[item.nombre]) {
+                        reporteAgrupado[areaDestino].productos[item.nombre] = { cantidad: 0, totalProducto: 0 };
+                    }
+
+                    let precioExtras = (item.extrasSeleccionados || []).reduce((sum, e) => sum + e.precio, 0);
+                    let subtotalArticuloCompleto = (item.precio + precioExtras) * item.cantidad;
+
+                    reporteAgrupado[areaDestino].productos[item.nombre].cantidad += item.cantidad;
+                    reporteAgrupado[areaDestino].productos[item.nombre].totalProducto += subtotalArticuloCompleto;
+                    
+                    reporteAgrupado[areaDestino].totalDinero += subtotalArticuloCompleto;
+                    granTotalGlobal += subtotalArticuloCompleto;
+                });
+            });
+
+            let rText = `\n`;
+            rText += `================================\n`;
+            rText += `     REPORTE DIARIO DE VENTAS   \n`;
+            rText += `      ${ticketConfig.nombre.toUpperCase()}      \n`;
+            rText += `================================\n`;
+            rText += `Fecha Cierre: ${new Date().toLocaleDateString()}\n`;
+            rText += `Hora Cierre : ${new Date().toLocaleTimeString()}\n`;
+            rText += `--------------------------------\n`;
+            rText += ` VENTA GLOBAL:    $${granTotalGlobal.toFixed(2)}\n`;
+            rText += `--------------------------------\n\n`;
+
+            Object.keys(reporteAgrupado).forEach(area => {
+                let datosArea = reporteAgrupado[area];
+                if(datosArea.totalDinero > 0) {
+                    rText += `[ ÁREA: ${area.toUpperCase()} ]\n`;
+                    Object.keys(datosArea.productos).forEach(prodNombre => {
+                        let pInfo = datosArea.productos[prodNombre];
+                        rText += `${pInfo.cantidad}x ${prodNombre.substring(0,18)}\n`;
+                        rText += `  Sub: $${pInfo.totalProducto.toFixed(2)}\n`;
+                    });
+                    rText += `--------------------------------\n`;
+                    rText += `TOTAL DE ÁREA:    $${datosArea.totalDinero.toFixed(2)}\n`;
+                    rText += `================================\n\n`;
+                }
+            });
+
+            rText += `     FIN REPORTE DE CAJA      \n\n\n\n\x1Bi`;
+            enviarImpresionUniversal(rText);
+        }
+
+        // CONTROL CRUD EXTRAS DEL CATALOGO (MODIFICADO CON EDICIÓN)
+        function renderTablaExtrasCatalog() {
+            const tbody = document.getElementById('tbody-admin-extras');
+            tbody.innerHTML = '';
+            catalogoExtras.forEach((ex, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>✨ ${ex.nombre}</strong></td>
+                        <td>$${ex.precio.toFixed(2)}</td>
+                        <td class="actions-cell">
+                            <button class="btn-crud btn-edit" onclick="iniciarEdicionExtra(${idx})">Editar</button>
+                            <button class="btn-crud btn-delete" onclick="eliminarExtraCatalogo(${idx})">X</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function iniciarEdicionExtra(idx) {
+            idExtraEditandoIndex = idx;
+            const extra = catalogoExtras[idx];
+            document.getElementById('lbl-titulo-admin-extras').innerText = `✏️ Editando Modificador: ${extra.nombre}`;
+            document.getElementById('txt-nuevo-extra-nombre').value = extra.nombre;
+            document.getElementById('num-nuevo-extra-precio').value = extra.precio;
+            
+            const btn = document.getElementById('btn-guardar-extra-catalogo');
+            btn.innerText = "Guardar";
+            btn.style.backgroundColor = "var(--azul-editar)";
+        }
+
+        function agregarExtraCatalogo() {
+            const inputNom = document.getElementById('txt-nuevo-extra-nombre');
+            const inputPre = document.getElementById('num-nuevo-extra-precio');
+            const nombre = inputNom.value.trim().toUpperCase();
+            const precio = parseFloat(inputPre.value);
+
+            if(!nombre || isNaN(precio)) return alert("Introduce datos válidos para el modificador.");
+
+            if(idExtraEditandoIndex !== null) {
+                // Actualizar Modificador existente
+                catalogoExtras[idExtraEditandoIndex] = { nombre, precio };
+                idExtraEditandoIndex = null;
+                document.getElementById('lbl-titulo-admin-extras').innerText = "3. Catálogo de Extras y Modificadores";
+                const btn = document.getElementById('btn-guardar-extra-catalogo');
+                btn.innerText = "+ Agregar";
+                btn.style.backgroundColor = "#6a4c93";
+            } else {
+                // Crear uno nuevo
+                if(catalogoExtras.some(e => e.nombre === nombre)) return alert("Este extra ya está registrado.");
+                catalogoExtras.push({ nombre, precio });
+            }
+
+            guardarCatalogoExtras();
+            renderTablaExtrasCatalog();
+
+            inputNom.value = '';
+            inputPre.value = '0.00';
+        }
+
+        function eliminarExtraCatalogo(idx) {
+            if(confirm("¿Eliminar este modificador del catálogo general?")) {
+                if(idExtraEditandoIndex === idx) {
+                    idExtraEditandoIndex = null;
+                    document.getElementById('lbl-titulo-admin-extras').innerText = "3. Catálogo de Extras y Modificadores";
+                    const btn = document.getElementById('btn-guardar-extra-catalogo');
+                    btn.innerText = "+ Agregar";
+                    btn.style.backgroundColor = "#6a4c93";
+                }
+                catalogoExtras.splice(idx, 1);
+                guardarCatalogoExtras();
+                renderTablaExtrasCatalog();
+            }
+        }
+
+        function reimprimirTicketDirecto(idTicket) {
+            const ticket = historialTickets.find(t => Number(t.id) === Number(idTicket));
+            if (ticket) { imprimirTicketDispositivoRAWBT(ticket); } else { alert("No se encontró el ticket."); }
+        }
+
+        function cargarTicketParaEditarDesdeHistorial(idTicket) {
+            ticketIdEditandoActualmente = Number(idTicket);
+            const t = historialTickets.find(h => Number(h.id) === Number(idTicket));
+            if(!t) return;
+            document.getElementById('modal-reporte').style.display = 'none';
+            document.getElementById('lbl-id-ticket-editando').innerText = `#${idTicket} (${t.mesa})`;
+            document.getElementById('banner-editando-ticket').style.display = 'block';
+            document.getElementById('active-cart-title').innerText = `EDITANDO TICKET #${idTicket}`;
+            renderMesas(); actualizarMesaActualUI(); cambiarPestanaMovil('cuenta');
+        }
+
+        function finalizarEdicionTicketHistorial() {
+            if (ticketIdEditandoActualmente === null) return;
+            const t = historialTickets.find(h => Number(h.id) === Number(ticketIdEditandoActualmente));
+            if(t) {
+                let nuevoTotal = 0; 
+                t.items.forEach(i => {
+                    let exPrice = (i.extrasSeleccionados || []).reduce((s,e) => s+e.precio, 0);
+                    nuevoTotal += ((i.precio + exPrice) * i.cantidad);
+                }); 
+                t.total = nuevoTotal;
+                if(t.items.length === 0) {
+                    historialTickets = historialTickets.filter(h => Number(h.id) !== Number(ticketIdEditandoActualmente));
+                    alert("Ticket vacío. Se eliminó del historial.");
+                } else {
+                    alert("¡Cambios guardados!");
+                    if(confirm("¿Deseas reimprimir el ticket corregido?")) { imprimirTicketDispositivoRAWBT(t); }
+                }
+            }
+            ticketIdEditandoActualmente = null;
+            document.getElementById('banner-editando-ticket').style.display = 'none';
+            document.getElementById('active-cart-title').innerText = mesaSeleccionada;
+            guardarHistorial(); renderMesas(); actualizarMesaActualUI(); cambiarPestanaMovil('mesas');
+        }
+
+        function abrirReporte() {
+            document.getElementById('modal-reporte').style.display = 'flex';
+            const ventasCat = obtenerVentasPorCategoria();
+            let granTotal = 0;
+            const tbody = document.getElementById('tbody-reporte-categorias'); tbody.innerHTML = '';
+            menuData.forEach(cat => {
+                const totalCategoria = ventasCat[cat.categoria] || 0; granTotal += totalCategoria;
+                tbody.innerHTML += `<tr><td><strong>${cat.categoria}</strong></td><td>$${totalCategoria.toFixed(2)}</td></tr>`;
+            });
+            document.getElementById('lbl-venta-global-total').innerText = `$${granTotal.toFixed(2)}`;
+
+            const tbodyHist = document.getElementById('tbody-historial-tickets'); tbodyHist.innerHTML = '';
+            if(historialTickets.length === 0) {
+                tbodyHist.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">No hay ventas hoy.</td></tr>`;
+            } else {
+                [...historialTickets].reverse().forEach(ticket => {
+                    tbodyHist.innerHTML += `
+                        <tr>
+                            <td><strong>#${ticket.id}</strong></td>
+                            <td>${ticket.mesa}</td>
+                            <td><strong>$${ticket.total.toFixed(0)}</strong></td>
+                            <td class="actions-cell">
+                                <button class="btn-crud btn-edit" onclick="cargarTicketParaEditarDesdeHistorial(${ticket.id})">Editar</button>
+                                <button class="btn-crud btn-add" style="background-color:var(--barro); font-size:14px; padding:4px 8px;" onclick="reimprimirTicketDirecto(${ticket.id})">🖨️</button>
+                                <button class="btn-crud btn-delete" style="padding:4px 8px;" onclick="eliminarTicketIndividualHistorial(${ticket.id})">🗑️</button>
+                            </td>
+                        </tr>`;
+                });
+            }
+        }
+
+        function eliminarTicketIndividualHistorial(idTicket) {
+            if(!confirm(`¿Eliminar ticket #${idTicket}?`)) return;
+            historialTickets = historialTickets.filter(t => Number(t.id) !== Number(idTicket));
+            guardarHistorial(); abrirReporte();
+        }
+
+        function abrirAdmin() {
+            if(ticketIdEditandoActualmente !== null) { alert("Termina de editar el ticket actual."); return; }
+            document.getElementById('modal-admin').style.display = 'flex';
+            actualizarSelectCategorias(); 
+            actualizarSelectAreasImpresion();
+            renderTablasAdmin();
+            renderTablaAreasAdmin();
+            renderTablaExtrasCatalog();
+            cargarInputsConfiguracionTicket();
+        }
+        function cerrarAdmin() { cancelarEdicionProducto(); document.getElementById('modal-admin').style.display = 'none'; renderMenu(); }
+
+        function conmutarInputsVariante(usarVariantes) {
+            document.getElementById('box-precio-simple').style.display = usarVariantes ? 'none' : 'flex';
+            document.getElementById('box-precio-variantes').style.display = usarVariantes ? 'block' : 'none';
+        }
+
+        function agregarFilaVarianteInput() {
+            const div = document.createElement('div'); div.className = 'variant-row';
+            div.innerHTML = `<input type="text" placeholder="Variante" style="flex:2;"><input type="number" placeholder="0.00" step="0.01" style="flex:1;">`;
+            document.getElementById('div-lista-variantes-inputs').appendChild(div);
+        }
+
+        function actualizarSelectCategorias() {
+            const select = document.getElementById('sel-prod-cat'); select.innerHTML = '';
+            menuData.forEach(cat => { select.innerHTML += `<option value="${cat.categoria}">${cat.categoria}</option>`; });
+        }
+
+        function actualizarSelectAreasImpresion() {
+            const select = document.getElementById('sel-prod-impresora'); select.innerHTML = '';
+            areasPreparacion.forEach(area => { select.innerHTML += `<option value="${area}">${area}</option>`; });
+        }
+
+        function renderTablaAreasAdmin() {
+            const tbody = document.getElementById('tbody-admin-areas'); tbody.innerHTML = '';
+            areasPreparacion.forEach((area, idx) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>📍 ${area}</strong></td>
+                        <td class="actions-cell">
+                            <button class="btn-crud btn-edit" onclick="iniciarEdicionArea(${idx})">Editar</button>
+                            <button class="btn-crud btn-delete" onclick="eliminarAreaPreparacion(${idx})">X</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function iniciarEdicionArea(idx) {
+            idAreaEditandoIndex = idx;
+            document.getElementById('lbl-titulo-admin-areas').innerText = `✏️ Editando Área: ${areasPreparacion[idx]}`;
+            document.getElementById('txt-nueva-area-nombre').value = areasPreparacion[idx];
+            document.getElementById('btn-guardar-area').innerText = "Guardar";
+            document.getElementById('btn-guardar-area').className = "btn-crud btn-edit";
+        }
+
+        function agregarAreaPreparacion() {
+            const input = document.getElementById('txt-nueva-area-nombre');
+            const nombreArea = input.value.trim();
+            if(!nombreArea) return alert("Ingresa un nombre válido.");
+
+            if(idAreaEditandoIndex !== null) {
+                const antiguoNombre = areasPreparacion[idAreaEditandoIndex];
+                areasPreparacion[idAreaEditandoIndex] = nombreArea;
+                
+                menuData.forEach(cat => {
+                    cat.platillos.forEach(p => { if(p.impresora === antiguoNombre) p.impresora = nombreArea; });
+                });
+                
+                idAreaEditandoIndex = null;
+                document.getElementById('lbl-titulo-admin-areas').innerText = "1. Configurar Áreas de Destino";
+                document.getElementById('btn-guardar-area').innerText = "+ Añadir";
+                document.getElementById('btn-guardar-area').className = "btn-crud btn-add";
+            } else {
+                if(areasPreparacion.map(a=>a.toLowerCase()).includes(nombreArea.toLowerCase())) return alert("Esta área ya existe.");
+                areasPreparacion.push(nombreArea);
+            }
+
+            input.value = ''; guardarAreas(); guardarMenu(); actualizarSelectAreasImpresion(); renderTablaAreasAdmin(); renderTablasAdmin();
+        }
+
+        function eliminarAreaPreparacion(idx) {
+            const areaAEliminar = areasPreparacion[idx];
+            if(confirm(`¿Seguro que deseas eliminar "${areaAEliminar}"?`)) {
+                areasPreparacion.splice(idx, 1);
+                guardarAreas(); actualizarSelectAreasImpresion(); renderTablaAreasAdmin();
+            }
+        }
+
+        // TABLA PRODUCTOS MODIFICADA CON ACCIÓN DE DUPLICAR
+        function renderTablasAdmin() {
+            const tbodyCat = document.getElementById('tbody-admin-categorias'); tbodyCat.innerHTML = '';
+            menuData.forEach((cat, idx) => {
+                tbodyCat.innerHTML += `
+                    <tr>
+                        <td><strong>${cat.categoria}</strong></td>
+                        <td class="actions-cell">
+                            <button class="btn-crud btn-edit" onclick="iniciarEdicionCategoria(${idx})">Editar</button>
+                            <button class="btn-crud btn-delete" onclick="eliminarCategoria(${idx})">X</button>
+                        </td>
+                    </tr>`;
+            });
+
+            const tbodyProd = document.getElementById('tbody-admin-productos'); tbodyProd.innerHTML = '';
+            menuData.forEach((cat, catIdx) => {
+                cat.platillos.forEach((platillo) => {
+                    let detallePrecio = '';
+                    if (platillo.variantes) { detallePrecio = platillo.variantes.map(v => `${v.nombre}:$${v.precio}`).join('<br>'); } 
+                    else { detallePrecio = `$${platillo.precio.toFixed(0)}`; }
+
+                    tbodyProd.innerHTML += `
+                        <tr>
+                            <td><img src="${platillo.imagen || imgDefecto}" width="35" height="35"></td>
+                            <td><strong>${platillo.nombre}</strong></td>
+                            <td>${cat.categoria}</td>
+                            <td>${detallePrecio}</td>
+                            <td><span style="color:var(--barro);font-weight:bold;">${platillo.impresora || 'Sin Área'}</span></td>
+                            <td class="actions-cell">
+                                <button class="btn-crud btn-edit" onclick="cargarProductoParaEditar(${platillo.id})">Editar</button>
+                                <button class="btn-crud btn-add" style="background-color: var(--verde-mex);" onclick="duplicarProductoHaciaFormulario(${platillo.id})">Duplicar</button>
+                                <button class="btn-crud btn-delete" onclick="eliminarProducto(${platillo.id})">Borrar</button>
+                            </td>
+                        </tr>`;
+                });
+            });
+        }
+
+        function iniciarEdicionCategoria(idx) {
+            idCategoriaEditandoIndex = idx;
+            document.getElementById('lbl-titulo-admin-categorias').innerText = `✏️ Editando Categoría: ${menuData[idx].categoria}`;
+            document.getElementById('txt-nueva-cat').value = menuData[idx].categoria;
+            document.getElementById('btn-guardar-categoria').innerText = "Guardar";
+            document.getElementById('btn-guardar-categoria').className = "btn-crud btn-edit";
+        }
+
+        function agregarCategoria() {
+            const nombre = document.getElementById('txt-nueva-cat').value.trim();
+            if(!nombre) return alert("Escribe un nombre.");
+
+            if(idCategoriaEditandoIndex !== null) {
+                menuData[idCategoriaEditandoIndex].categoria = nombre;
+                idCategoriaEditandoIndex = null;
+                document.getElementById('lbl-titulo-admin-categorias').innerText = "2. Categorías";
+                document.getElementById('btn-guardar-categoria').innerText = "+ Guardar";
+                document.getElementById('btn-guardar-categoria').className = "btn-crud btn-add";
+            } else {
+                if(menuData.find(c => c.categoria.toLowerCase() === nombre.toLowerCase())) return alert("Ya existe.");
+                menuData.push({ categoria: nombre, platillos: [] });
+            }
+
+            document.getElementById('txt-nueva-cat').value = '';
+            guardarMenu(); actualizarSelectCategorias(); renderTablasAdmin();
+        }
+
+        function eliminarCategoria(idx) {
+            if(confirm(`¿Eliminar la categoría "${menuData[idx].categoria}" y sus productos?`)) { menuData.splice(idx, 1); guardarMenu(); actualizarSelectCategorias(); renderTablasAdmin(); }
+        }
+
+        function cargarProductoParaEditar(idProducto) {
+            let productoEncontrado = null; let categoriaEncontrada = null;
+            menuData.forEach(cat => {
+                const prod = cat.platillos.find(p => p.id === idProducto);
+                if(prod) { productoEncontrado = prod; categoriaEncontrada = cat; }
+            });
+            if(!productoEncontrado) return;
+
+            idProductoEditando = idProducto;
+            imgProductoEditandoOriginal = productoEncontrado.imagen;
+            document.getElementById('lbl-titulo-formulario-producto').innerText = `✏️ Editando: ${productoEncontrado.nombre}`;
+            document.getElementById('btn-guardar-producto-principal').innerText = "💾 Guardar Cambios";
+            document.getElementById('btn-cancelar-edicion').style.display = "inline-block";
+            document.getElementById('sel-prod-cat').value = categoriaEncontrada.categoria;
+            document.getElementById('txt-prod-nombre').value = productoEncontrado.nombre;
+            document.getElementById('sel-prod-impresora').value = productoEncontrado.impresora || "";
+
+            if(productoEncontrado.variantes && productoEncontrado.variantes.length > 0) {
+                document.getElementById('rad-precio-variantes').checked = true; conmutarInputsVariante(true);
+                const containerVariantes = document.getElementById('div-lista-variantes-inputs');
+                containerVariantes.innerHTML = '';
+                productoEncontrado.variantes.forEach(v => {
+                    const div = document.createElement('div'); div.className = 'variant-row';
+                    div.innerHTML = `<input type="text" value="${v.nombre}" style="flex:2;"><input type="number" value="${v.precio}" step="0.01" style="flex:1;">`;
+                    containerVariantes.appendChild(div);
+                });
+            } else {
+                document.getElementById('rad-precio-simple').checked = true; conmutarInputsVariante(false);
+                document.getElementById('num-prod-precio').value = productoEncontrado.precio;
+            }
+        }
+
+        // NUEVA FUNCIÓN: DUPLICAR PRODUCTO EXISTENTE HACIA EL FORMULARIO
+        function duplicarProductoHaciaFormulario(idProducto) {
+            let productoEncontrado = null; let categoriaEncontrada = null;
+            menuData.forEach(cat => {
+                const prod = cat.platillos.find(p => p.id === idProducto);
+                if(prod) { productoEncontrado = prod; categoriaEncontrada = cat; }
+            });
+            if(!productoEncontrado) return;
+
+            // Reiniciamos ID editando porque es un REGISTRO NUEVO clonado
+            idProductoEditando = null;
+            // Guardamos la imagen original para conservarla si no se sube otra
+            imgProductoEditandoOriginal = productoEncontrado.imagen;
+
+            document.getElementById('lbl-titulo-formulario-producto').innerText = `✨ Duplicando: ${productoEncontrado.nombre}`;
+            document.getElementById('btn-guardar-producto-principal').innerText = "🚀 Registrar Producto Clonado";
+            document.getElementById('btn-cancelar-edicion').style.display = "inline-block";
+            
+            document.getElementById('sel-prod-cat').value = categoriaEncontrada.categoria;
+            document.getElementById('txt-prod-nombre').value = productoEncontrado.nombre + " COPIA";
+            document.getElementById('sel-prod-impresora').value = productoEncontrado.impresora || "";
+
+            if(productoEncontrado.variantes && productoEncontrado.variantes.length > 0) {
+                document.getElementById('rad-precio-variantes').checked = true; conmutarInputsVariante(true);
+                const containerVariantes = document.getElementById('div-lista-variantes-inputs');
+                containerVariantes.innerHTML = '';
+                productoEncontrado.variantes.forEach(v => {
+                    const div = document.createElement('div'); div.className = 'variant-row';
+                    div.innerHTML = `<input type="text" value="${v.nombre}" style="flex:2;"><input type="number" value="${v.precio}" step="0.01" style="flex:1;">`;
+                    containerVariantes.appendChild(div);
+                });
+            } else {
+                document.getElementById('rad-precio-simple').checked = true; conmutarInputsVariante(false);
+                document.getElementById('num-prod-precio').value = productoEncontrado.precio;
+            }
+            
+            // Subir scroll automático al formulario de agregar producto para comodidad visual
+            document.getElementById('lbl-titulo-formulario-producto').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelarEdicionProducto() {
+            idProductoEditando = null; imgProductoEditandoOriginal = null;
+            document.getElementById('lbl-titulo-formulario-producto').innerText = "4. Agregar Producto";
+            document.getElementById('btn-guardar-producto-principal').innerText = "🚀 Registrar Producto";
+            document.getElementById('btn-cancelar-edicion').style.display = "none";
+            document.getElementById('txt-prod-nombre').value = '';
+            document.getElementById('file-prod-img').value = '';
+            document.getElementById('num-prod-precio').value = '0.00';
+            document.getElementById('div-lista-variantes-inputs').innerHTML = `<div class="variant-row"><input type="text" placeholder="Ej. Orden" style="flex:2;"><input type="number" placeholder="80.00" step="0.01" style="flex:1;"></div>`;
+            document.getElementById('rad-precio-simple').checked = true; conmutarInputsVariante(false);
+        }
+
+        function procesarYGuardarProducto() {
+            const fileInput = document.getElementById('file-prod-img'); const file = fileInput.files[0];
+            if (file) {
+                const lector = new FileReader(); lector.onload = function(e) { ejecutarGuardadoProducto(e.target.result); };
+                lector.readAsDataURL(file);
+            } else {
+                ejecutarGuardadoProducto(imgProductoEditandoOriginal ? imgProductoEditandoOriginal : imgDefecto);
+            }
+        }
+
+        function ejecutarGuardadoProducto(imagenDestino) {
+            const catNombre = document.getElementById('sel-prod-cat').value;
+            const nombre = document.getElementById('txt-prod-nombre').value.trim();
+            const impresora = document.getElementById('sel-prod-impresora').value;
+            const usarVariantes = document.getElementById('rad-precio-variantes').checked;
+
+            if(!nombre) return alert("Nombre obligatorio.");
+            let itemVariantes = null; let precioSimple = 0;
+
+            if (usarVariantes) {
+                itemVariantes = [];
+                const filas = document.getElementById('div-lista-variantes-inputs').getElementsByClassName('variant-row');
+                for(let fila of filas) {
+                    const inputs = fila.getElementsByTagName('input');
+                    const vNom = inputs[0].value.trim(); const vPre = parseFloat(inputs[1].value);
+                    if (vNom && !isNaN(vPre)) itemVariantes.push({ nombre: vNom, precio: vPre });
+                }
+                if(itemVariantes.length === 0) return alert("Agrega una variante.");
+            } else {
+                precioSimple = parseFloat(document.getElementById('num-prod-precio').value);
+                if (isNaN(precioSimple)) precioSimple = 0;
+            }
+
+            if (idProductoEditando !== null) {
+                menuData.forEach(cat => { cat.platillos = cat.platillos.filter(p => p.id !== idProductoEditando); });
+                menuData.find(c => c.categoria === catNombre).platillos.push({ id: idProductoEditando, nombre, precio: precioSimple, impresora, imagen: imagenDestino, variantes: itemVariantes });
+            } else {
+                menuData.find(c => c.categoria === catNombre).platillos.push({ id: Date.now(), nombre, precio: precioSimple, impresora, imagen: imagenDestino, variantes: itemVariantes });
+            }
+            cancelarEdicionProducto(); guardarMenu(); renderTablasAdmin();
+        }
+
+        function eliminarProducto(idProducto) {
+            if(confirm("¿Eliminar producto?")) {
+                menuData.forEach(cat => { cat.platillos = cat.platillos.filter(p => p.id !== idProducto); });
+                guardarMenu(); renderTablasAdmin();
+            }
+        }
+
+        function cargarInputsConfiguracionTicket() {
+            document.getElementById('txt-ticket-nombre').value = ticketConfig.nombre || '';
+            document.getElementById('txt-ticket-direccion').value = ticketConfig.direccion || '';
+            document.getElementById('txt-ticket-telefono').value = ticketConfig.telefono || '';
+            document.getElementById('txt-ticket-pie').value = ticketConfig.pie || '';
+        }
+
+        function procesarYGuardarConfigTicket() {
+            ticketConfig.nombre = document.getElementById('txt-ticket-nombre').value.trim() || 'MI NEGOCIO';
+            ticketConfig.direccion = document.getElementById('txt-ticket-direccion').value.trim();
+            ticketConfig.telefono = document.getElementById('txt-ticket-telefono').value.trim();
+            ticketConfig.pie = document.getElementById('txt-ticket-pie').value.trim();
+            localStorage.setItem('pos_mex_ticketConfig', JSON.stringify(ticketConfig));
+            document.getElementById('lbl-nombre-establecimiento-header').innerText = ticketConfig.nombre;
+            alert("¡Datos guardados!");
+        }
+
+        function reiniciarTodoSistema() {
+            if(confirm("🚨 ¿Deseas borrar todo el historial y mesas del día?")) {
+                localStorage.removeItem('pos_mex_mesasActivas'); localStorage.removeItem('pos_mex_historialTickets');
+                document.getElementById('modal-reporte').style.display = 'none';
+                ticketIdEditandoActualmente = null; document.getElementById('banner-editando-ticket').style.display = 'none';
+                cargarTodo(); renderMesas(); actualizarMesaActualUI(); 
+                if(window.innerWidth <= 768) { cambiarPestanaMovil('mesas'); }
+            }
+        }
+
+        window.onload = function() { cargarTodo(); renderMenu(); renderMesas(); actualizarMesaActualUI(); };
+    </script>
+</body>
+</html>
