@@ -958,7 +958,7 @@
                 const precioCompletoUnitario = item.precio + priceExtras;
                 const sub = precioCompletoUnitario * item.cantidad;
 
-                tText += `${item.cantidad} x ${item.nombre.substring(0,22)}\n`;
+                tText += `${item.cantidad} x ${item.nombre}\n`;
                 
                 if(item.extrasSeleccionados && item.extrasSeleccionados.length > 0) {
                     item.extrasSeleccionados.forEach(e => {
